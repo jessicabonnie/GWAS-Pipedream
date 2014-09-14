@@ -1,0 +1,52 @@
+							PIPEDREAM
+
+Description
+-----------
+
+Pipedream (working title) is a pipeline to perform basic SNP, gender, and population QC on genomic data.
+
+
+
+Contents
+----------
+Folder: SHcode
+	makedata.sh
+	pheno_inc.sh
+
+Folder: Rcode
+
+
+Folder: PYTHONcode
+
+
+
+INPUTS
+-----------
+nickname - alias for the data, used in all filenames
+DATAFILE - path to full data table output from GenomeStudio, Top Allele format
+phenofile - phenotype file, specific columns expected, see SHcode/pheno_inc.sh for details
+
+
+Order of Scripts
+------------------
+
+SHcode/makedata.sh
+	Transforms output from Genome Studio into plink files.
+	See Script for option/parameter details
+
+SHcode/pheno_inc.sh
+	This script incorporates phenotypic information (disease status, sex, family relationships) into the raw plink files from makedata.sh
+	It creates numeric covariate files based on a hard coded list of column names.
+
+
+Requirements
+--------------
+PLINK
+KING
+Python
+R
+
+
+Authors
+----------
+JBonnie
