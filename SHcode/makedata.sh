@@ -1,6 +1,14 @@
 #!/bin/bash
 #!/usr/bin/bash
 
+
+echo -e "#########################################################################"
+echo -e
+echo -e "# GWAS-Pipedream - Standard GWAS QC Pipeline Package"
+echo -e "# (c) 2014-2015 JBonnie, WMChen"
+echo -e
+echo -e "#########################################################################"
+
 ### This script transforms output from Genome Studio (Full Data Tables in Top Allele format) into PLINK format.
 
 
