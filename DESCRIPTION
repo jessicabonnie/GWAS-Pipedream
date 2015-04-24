@@ -1,0 +1,9 @@
+Title: GWAS-Pipedream
+Version: 0.0.1
+Author: JBonnie <realviacauchy@gmail.com>
+Maintainer: JBonnie <realviacauchy@gmail.com>
+Description: Basic SNP, gender, and population QC on GWAS data
+Depends:
+    R (>= 3.0.0)
+    KING (>=1.5) (http://people.virginia.edu/~wc9c/KING/index.html)
+License: GPL-3

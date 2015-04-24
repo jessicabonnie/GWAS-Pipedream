@@ -4,7 +4,7 @@ Description
 -----------
 
 GWAS-Pipedream (working title) is a pipeline to perform basic SNP, gender, and population QC on genomic data.
-
+Copyright (C) 2015  JBonnie, WMChen
 
 
 Contents
@@ -50,3 +50,4 @@ R
 Authors
 ----------
 JBonnie
+Wei-Min Chen
