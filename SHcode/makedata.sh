@@ -9,7 +9,7 @@ echo -e "# (c) 2014-2015 JBonnie, WMChen"
 echo -e
 echo -e "#########################################################################"
 
-### This script transforms output from Genome Studio (Full Data Tables in Top Allele format) into PLINK format.
+### This script transforms output from Genome Studio (Full Data Tables in given format -- e.g. Top Alleles, GType) into PLINK format.
 
 
 ##############################################################################
@@ -29,6 +29,7 @@ echo -e "#######################################################################
 # Definining/Reading user specified script parameters/variables/values
 DATAFILE=$1
 nickname=$2
+format=$3
 
 
 
@@ -40,12 +41,12 @@ echo -e "#"
 echo -e "# Disc: Transforms output from Genome Studio into plink files."
 echo -e "#"
 echo -e "# Note: PLINK output files will NOT contain sex, status, or family information, those are added during pheno_inc.sh"
-echo -e "# Note: DATAFILE expected to be in Top Allele format."
-echo -e "# Note: DATAFILE expected to contain a GType column."
+echo -e "# Note: {format} must match the COLUMN NAME of the desired genotyping format."
+echo -e "# Note: If {format} contains a space QUOTES must be used."
 echo -e "# Note: DATAFILE expected to have more than one column per sample."
-echo -e "# Note: The first two '.Top Allele' columns are expected to occur within the first 20 columns of DATAFILE."
+echo -e "# Note: The first two genotype columns are expected to occur within the first 20 columns of DATAFILE."
 echo -e "#"
-echo -e "# Usage: sh  ~/SHcode/make_data.sh {DATAFILE} {nickname}"
+echo -e "# Usage: sh  ~/SHcode/make_data.sh {DATAFILE} {nickname} {format}"
 echo -e "#"
 echo -e "# See Script for option/parameter details"
 echo -e "#"
@@ -54,6 +55,7 @@ echo -e "# date: 10.25.13"
 echo -e
 echo -e "Full Data Table: ${DATAFILE}"
 echo -e "Study Alias: ${nickname}"
+echo -e "Allele Format (column name): ${format}"
 echo -e "Performed on:"
 date
 echo -e
@@ -88,13 +90,13 @@ echo -e
 #Lets read some columns numbers!
 
 
-#Locate the first two occurances of the pattern ".Top Allele", and then find the difference.
-#This tells us the uniform number of columns between each ".Top Allele"!
+#Locate the first two occurances of the pattern ${format}", and then find the difference.
+#This tells us the uniform number of columns between each genotype column!
 
-topcols=$(cut -f1-20 $DATAFILE| sed "s/\r//g" | head -n1| sed 's/\t/\n/g'| awk '$0 ~/.Top Allele/ {print NR}')
-top1=$( echo ${topcols} | awk '{print $1}')
-top2=$( echo ${topcols} | awk '{print $2}')
-dif=$((${top2} - ${top1}))
+gencols=$(cut -f1-20 $DATAFILE| sed "s/\r//g" | head -n1| sed 's/\t/\n/g'| awk -v pattern="${format}" 'BEGIN {FS="\t"}; $0 ~ pattern {print NR}')
+gen1=$( echo ${gencols} | awk '{print $1}')
+gen2=$( echo ${gencols} | awk '{print $2}')
+dif=$((${gen2} - ${gen1}))
 
 #Locate the first occurance of the pattern ".Top Allele", that is the first data column of interest.
 #top1=$(cut -f1-8 $DATAFILE| sed "s/\r//g" | head -n1| sed 's/\t/\n/g'| awk '$0 ~/.Top Allele/ {print NR}')
@@ -116,8 +118,8 @@ echo -e "Column Numbers"
 echo -e "Chromosome : ${chr}"
 echo -e "SNP : ${snp}"
 echo -e "SNP POSITION : ${pos}"
-echo -e "First Top Allele : ${top1}"
-echo -e "Second Top Allele : ${top2}"
+echo -e "First ${format} : ${gen1}"
+echo -e "Second ${format} : ${gen2}"
 echo -e "Difference (Number of Columns per Sample) : ${dif}"
 echo -e
 
@@ -131,13 +133,14 @@ echo -e "------------------\n"
 echo -e
 
 
-## For each .Top Allele column, print the allele information, replacing "--" with "0 0" and adding spaces between the alleles
+## For each genotype column, print the allele information, replacing "--" with "0 0" and adding spaces between the alleles
 ## Also, for some reason, flip the alleles, this was how it was done in inherited skeleton, so it has been left that way.
+formattitle=$(echo ${format} | sed 's/ //g')
 
 awk 'NR>1' $DATAFILE | sed "s/\r//g" |\
-  awk -v top1=${top1} -v top2=${top2} -v dif=${dif} '{printf("%s", $top1); for(i=top2;i<=NF;i+=dif) printf(" %s", $i);printf("\n");}' |\
+  awk -v gen1=${gen1} -v gen2=${gen2} -v dif=${dif} '{printf("%s", $gen1); for(i=gen2;i<=NF;i+=dif) printf(" %s", $i);printf("\n");}' |\
   sed 's/--/0 0/g' |\
- sed 's/\([A-Z]\)\([A-Z]\)/\2 \1/g' > topAllele_tped.tmp
+sed 's/\([A-Z]\)\([A-Z]\)/\2 \1/g' > ${formattitle}Allele_tped.tmp
 
 
 echo -e
@@ -157,8 +160,8 @@ echo "Creating PLINK TPED: Pasting TMP files"
 echo -e "------------------\n"
 echo -e
 
-# create tped by pasting snpInfo_tped.tmp and topAllele_tped.tmp
-paste -d" " snpInfo_tped.tmp topAllele_tped.tmp > data.tped
+# create tped by pasting snpInfo_tped.tmp and ${formattitle}Allele_tped.tmp
+paste -d" " snpInfo_tped.tmp ${formattitle}Allele_tped.tmp > data.tped
 
 
 
