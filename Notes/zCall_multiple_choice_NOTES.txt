@@ -1,0 +1,109 @@
+
+I. Top Level Folder - zCall
+	Step 1. QC Raw Report for Feeding Into Zcall
+		A. Take out known bad samples
+		B. Apply Subject Callrate Filter (%98)
+		C. Compare Number of Subjects, Before and After
+		D. Zip Up intermediate QC report
+	
+	
+	Step 2. Calculate Mean & Standard Deviations for each Homozygote Cluster (NOTE: zCall has built in MAF and Call Rate filters)
+
+
+	Step 3. Create Common (1) and Rare (3) SNP Lists using raw plink files (those used by Wei-Min in Initial QC)
+
+		A. Calculate Minor Allele Frequency in Raw Samples
+		B. Calculate Missingness in Raw Samples
+		C. Create Merged Table
+		D. Create List of Common SNPs (MAF>1%) with call rate greater than 98%
+		E. Create Three Lists of Rare (MAF>1%) SNPs with Callrates of 97%,98%,99%
+
+	Step 4. Create Allele and Flipping Update Files from Manifest
+		A. Identify correct manifest files based on chip version
+		B. Create File to Update Illumina Alleles (A/B) to ATCG
+		C. Create File to Set TOP Illumina Allele
+	
+	Step 5. EXTRACT COMMON SNPs from Raw PLINK Files
+		A. raw_extractcommon
+	
+	Step 6. EXCLUDE RARE SNPs from Raw PLINK Files (for all three Rare Lists)
+		A. raw_removerare97
+		B. raw_removerare98
+		C. raw_removerare99
+
+	Step 7. Create Update Files from Raw PLINK File
+		A. updatesex.txt
+		B. updatefamily.txt
+		C. updateparents.txt
+	
+II. Daughter Directory #1 - commonThresholds
+	Step 1. Subset ../MEAN.SD.txt (CREATED IN I.Step2) using the common SNP list
+	
+	Step 2. Recalculate BETAs using Subsetted MEAN.SD file
+	
+	Step 3. Recalculate Thresholds
+	
+	Step 4. Recall all NoCalls using these Thresholds
+	
+	Step 5. Convert File to PLINK Bim/Bed Format and Update Phenotype Info
+	
+	Step 6. Update Alleles and Flipping
+	
+	Step 7. EXTRACT RARE lists from zCalled PLINK FILES for ALL THREE RARE LISTS
+		A. zcall_rare97
+		B. zcall_rare98
+		C. zcall_rare99
+	
+	
+	Step 8. Create Results from EXTRACTING RARES from zCall and EXTRACTING COMMONS from raw ---> Grandaughter Directory Type 2 
+	
+	Step 9. Create Results from EXTRACTING RARES from zCall and EXCLUDING RARES from raw ---> Grandaughter Directory Type 3 
+	
+	Step 10. Run Threshold and Calibration Checking Loop -----> Granddaughter Directory Type 1
+		
+III. Daughter Directory #2 - basicThresholds
+	
+	Step 1. Recalculate BETAs using ../MEAN.SD file
+	
+	Step 2. Recalculate Thresholds
+	
+	Step 3. Recall all NoCalls using these Thresholds
+	
+	Step 4. Convert File to PLINK Bim/Bed Format and Update Phenotype Info
+	
+	Step 5. Update Alleles and Flipping
+	
+	Step 6. EXTRACT RARE lists from zCalled PLINK FILES for ALL THREE RARE LISTS
+		A. zcall_rare97
+		B. zcall_rare98
+		C. zcall_rare99
+	
+	Step 7. Create Results from EXTRACTING RARES from zCall and EXTRACTING COMMONS from raw ---> Grandaughter Directory Type 2 
+	
+	Step 8. Create Results from EXTRACTING RARES from zCall and EXCLUDING RARES from raw ---> Grandaughter Directory Type 3 
+	
+	Step 9. Run Threshold and Calibration Checking Loop -----> Granddaughter Directory Type 1
+	
+IV. Granddaughter Directory Type 1 -----> "threshold_calibration_checking"
+
+	Step 1. Calibrating Z Values between 3 and 15
+	
+	Step 2. Calculating the accuracy of Z values
+	
+V. Granddaughter Directory Type 2 ----> "extractRare_extractCommon"
+
+	Step 1. Merge ../zcall_rare* for each RARE category with ../../raw_extractcommon
+	
+	
+VI. Granddaughter Directory Type 3 ----> "extractRare_excludeRare"
+
+	Step 1. Merge ../zcall_rare* for each RARE category with ../../raw_excluderare
+	
+
+
+
+
+
+
+
+
