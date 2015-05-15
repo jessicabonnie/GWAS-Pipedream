@@ -117,12 +117,21 @@ echo -e
 sexcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/Gender_converted_to_number/ {print NR}')
 statuscol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/^T1D$/ {print NR}')
 
-
+if [ -z "$sexcol" ]; then
+  sexcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/Sex/ {print NR}')
+fi
 #The title of the ID column will depend on the project with some regularity
 if [ "${nickname}" = "dn" ]; then
 	idcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/^UVA_ID$/ {print NR}')
 else
   idcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/^Sample_ID$/ {print NR}')
+  if [ -z "$idcol" ]; then
+    idcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/^AnalyticID$/ {print NR}')
+    fi
+    #This is dumb, but just to catch this case where Analytic is mispelled..
+  if [ -z "$idcol" ]; then
+    idcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/^AnaltyicID$/ {print NR}')
+    fi
 fi
 echo -e
 echo "Here are the column numbers for the numeric gender, sample id, and status columns"
