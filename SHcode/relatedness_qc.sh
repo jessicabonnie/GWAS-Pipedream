@@ -1,7 +1,8 @@
 #!/bin/bash
 #!/usr/bin/bash
 
-### This script runs initial relatedness checking on data after the initial QC step. It uses the files in the 2_QC1 folder
+### This script runs initial relatedness checking on data after the initial QC step.
+### It uses files in the 2_QC1 folder as well as the covariable lists created during pheno_inc.sh
 
 
 
@@ -48,10 +49,11 @@ cov=${qc1_folder}/${nickname}.cov
 
 cd ${qc1_folder}
 echo "moved"
-#Create necessary tables for drawing and further relatedness QC
+#Create necessary tables for drawing and further relatedness QC if this is the first covariable
+if [ ${covariablevalue} -eq 1 ]; then
 king -b ${nickname}6.bed --related --degree 5 --errorrate 0.003 --prefix ${nickname}6
 # > ${nickname}6kin.out
-
+fi
 
 #Add designated covariable col to both kin and kin0
 field_count=$(awk 'NR==1{print NF}' ${nickname}6.kin0)
