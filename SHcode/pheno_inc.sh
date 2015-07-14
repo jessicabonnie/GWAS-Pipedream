@@ -200,7 +200,7 @@ function fetch_covar {
     done
  
 #Lets add the titles to the covariable file
-echo  -e 'FID\tIID\t'${covariabletitles[*]:0:${covariablecount}} > ${cov0}
+echo  -e 'FID\tIID\t'${covariabletitles[*]:0:${covariablecount}}| column -t > ${cov0}
 #And now the actual info
 cat covnames${covariablecount}.tmp >> ${cov0}
  
@@ -229,7 +229,7 @@ function replace_covariable {
   echo ${covariables[@]}
   for i in $(seq ${count}); do
     index=$(($i-1))
-    awk -v i=${i} -v "covar=${covariables[${index}]}" -v "covcol=${covcol}" 'BEGIN {FS="\t"}; $covcol == covar{sub(covar, i, $covcol); } 1' ${cov0} > cov.tmp
+    awk -v i=${i} -v "covar=${covariables[${index}]}" -v "covcol=${covcol}" 'BEGIN {FS="\t"; OFS="\t"}; $covcol == covar{sub(covar, i, $covcol); } 1' ${cov0} > cov.tmp
     mv cov.tmp ${cov0}
   done
 
