@@ -6,14 +6,14 @@
 
 
 ##############################################################################
-# Usage: sh  qc.sh {nickname} {sample_remove}
+# Usage: sh  qc1.sh {nickname} {sample_remove}
 ##############################################################################
 
 ####################################################################3
 #Arguments
 #
 #nickname : string, the alias for the project, used in all filenames
-#sample_remove : T/F, Do we want to exclude a number of samples right at the beginning. This is normally used when qc is being run for a second time.have relationship information to incorporate at the start of QC?
+#sample_remove : T/F, Do we want to exclude a number of samples right at the beginning. This is normally used when qc is being run for a second time.
 #		If so, it had better be contained in ${project_folder}/samplesremove_at_start.txt.
 #
 #####################################################################
