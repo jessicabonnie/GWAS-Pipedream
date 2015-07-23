@@ -177,8 +177,13 @@ echo -e
 # regardless, outside of the if statement the IID is doubled to also be FID and parents and affection status are defaulted to their missing values
 
 head -1 $DATAFILE | sed "s/\r//g" | sed "s/\t/\n/g" |\
- grep "GType" | sed "s/.GType//g" |\
+ grep "${format}" | sed "s/.$format//g" |\
  awk '{if(NF==2){print $1,$2,0,0,0,-9}else{print $1,$1,0,0,0,-9}}' > data.tfam
+
+
+#head -1 $DATAFILE | sed "s/\r//g" | sed "s/\t/\n/g" |\
+#    grep "Top Alleles" | sed "s/.Top Alleles//g" |\
+#    awk '{if(NF==2){print $1,$2,0,0,0,-9}else{print $1,$1,0,0,0,-9}}' > data.tfam
 
 
 
@@ -202,9 +207,9 @@ echo -e
 rmlist=$(ls data.* *.tmp *.hh *.nosex)
 rm -f $rmlist
 
-tar --create -f raw.tar *
+#tar --create -f raw.tar *
 
-gzip raw.tar
+#gzip raw.tar
 
 
 echo 'makedata.sh completed: '$(date)
