@@ -32,6 +32,7 @@ echo -e "#######################################################################
 phenofile=$1
 nickname=$2
 covariablecount=$3
+#covariabletitlefile=$3
 family_info=$4
 
 
@@ -57,6 +58,10 @@ cov=${qc1_folder}/${nickname}.cov
 
 #Here is an array of likely covariable titles, note, we will assume that these are also the titles in the phenotype file
 covariabletitles=(Cohort Race Race_Ethnicity)
+
+#Alternatively, we could READ the covariable titles from a list file!
+  #IFS=$'\n' read -d '' -r -a covariabletitles <${covariabletitlefile}
+  #covariablecount=$(cat ${covariabletitlefile} | wc -l)
 
 echo -e "########################################################################################################################################"
 echo -e
