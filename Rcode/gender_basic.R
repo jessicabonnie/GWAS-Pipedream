@@ -3,7 +3,7 @@ print("#")
 print("# GWAS-Pipedream - Standard GWAS QC Pipeline Package")
 print("# (c) 2014-2015 JBonnie, WMChen")
 print("# Script: gender_basic.R -- colors by gender, counts mislabelled samples")
-print("# Usage: gender_basic.R <path to 'bySample' table from King> <nickname for prefixing file> <Overall Study Title> <TRUE/FALSE indication of whether to draw lines")
+print("# Usage: gender_basic.R <path to 'bySample' table from King> <nickname for prefixing file> <Overall Study Title> <TRUE/FALSE indication of whether to draw boundary lines")
 print("#")
 print("#########################################################################")
 
