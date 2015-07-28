@@ -13,14 +13,15 @@ echo -e "#######################################################################
 
 
 ##############################################################################
-# Usage: sh  make_data.sh {DATAFILE} {nickname}
+# Usage: sh  make_data.sh {DATAFILE} {nickname} {format}
 ##############################################################################
 
 ##################################################################################################################
 #Arguments
 # DATAFILE : the path to the full data table exported from Genome Studio.
-#		It is expected that the table will contain more than one column per sample. Including Top Allele and GType
+#		It is expected that the table will contain more than one column per sample.
 # nickname : string, the alias for the project, used in all filenames
+# format : the column type of interest e.g. "Top Allele" or "Gtype"
 #
 ########################################################################################################
 
