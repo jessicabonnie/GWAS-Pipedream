@@ -121,6 +121,7 @@ echo -e
 #Let's read some column numbers in the phenotype file
 sexcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/Gender_converted_to_number/ {print NR}')
 statuscol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/^T1D$/ {print NR}')
+familycol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/^Family_ID$/ {print NR}')
 
 if [ -z "$sexcol" ]; then
   sexcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/Sex/ {print NR}')
@@ -133,11 +134,11 @@ else
   if [ -z "$idcol" ]; then
     idcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/^AnalyticID$/ {print NR}')
     fi
-    #This is dumb, but just to catch this case where Analytic is mispelled..
   if [ -z "$idcol" ]; then
-    idcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/^AnaltyicID$/ {print NR}')
+    idcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/^Analytic_ID$/ {print NR}')
     fi
 fi
+
 echo -e
 echo "Here are the column numbers for the numeric gender, sample id, and status columns"
 echo ${sexcol}
