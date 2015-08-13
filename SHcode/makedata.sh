@@ -29,7 +29,7 @@ echo -e "#######################################################################
 
 # Definining/Reading user specified script parameters/variables/values
 DATAFILE=$1
-nickname=$2
+OUTNAME=$2
 format=$3
 
 
@@ -47,7 +47,7 @@ echo -e "# Note: If {format} contains a space QUOTES must be used."
 echo -e "# Note: DATAFILE expected to have more than one column per sample."
 echo -e "# Note: The first two genotype columns are expected to occur within the first 20 columns of DATAFILE."
 echo -e "#"
-echo -e "# Usage: sh  ~/SHcode/make_data.sh {DATAFILE} {nickname} {format}"
+echo -e "# Usage: sh  ~/SHcode/make_data.sh {DATAFILE} {OUTNAME} {format}"
 echo -e "#"
 echo -e "# See Script for option/parameter details"
 echo -e "#"
@@ -55,7 +55,7 @@ echo -e "# by:  jbonnie"
 echo -e "# date: 10.25.13"
 echo -e
 echo -e "Full Data Table: ${DATAFILE}"
-echo -e "Study Alias: ${nickname}"
+echo -e "Name/Path for plink output: ${OUTNAME}"
 echo -e "Allele Format (column name): ${format}"
 echo -e "Performed on:"
 date
@@ -65,12 +65,12 @@ echo -e "#######################################################################
 
 
 
-project_folder=$(pwd)
+# project_folder=$(pwd)
 
 
 #It's easier to make variables to indicate these subfolders and files
 
-raw_folder=${project_folder}/1_raw
+raw_folder=$(dirname $OUTNAME)/makedata_tmp
 
 echo -e
 echo -e "\n------------------"
@@ -141,7 +141,7 @@ formattitle=$(echo ${format} | sed 's/ //g')
 awk 'NR>1' $DATAFILE | sed "s/\r//g" |\
   awk -v gen1=${gen1} -v gen2=${gen2} -v dif=${dif} '{printf("%s", $gen1); for(i=gen2;i<=NF;i+=dif) printf(" %s", $i);printf("\n");}' |\
   sed 's/--/0 0/g' |\
-sed 's/\([A-Z]\)\([A-Z]\)/\2 \1/g' > ${formattitle}Allele_tped.tmp
+sed 's/\([A-Z]\)\([A-Z]\)/\2 \1/g' > ${raw_folder}/${formattitle}Allele_tped.tmp
 
 
 echo -e
@@ -153,7 +153,7 @@ echo -e
 
 # The first four columns of the tped hold the SNP info from the table with "0" place holders in the "Genetic Distance" column (column 3)
 
-awk 'NR>1' $DATAFILE | sed "s/\r//g" | awk -v chr=${chr} -v pos=${pos} -v snp=${snp} '{printf("%s %s 0 %d\n", $chr,$snp,$pos);}' > snpInfo_tped.tmp
+awk 'NR>1' $DATAFILE | sed "s/\r//g" | awk -v chr=${chr} -v pos=${pos} -v snp=${snp} '{printf("%s %s 0 %d\n", $chr,$snp,$pos);}' > ${raw_folder}/snpInfo_tped.tmp
 
 echo -e
 echo -e "\n------------------"
@@ -162,7 +162,7 @@ echo -e "------------------\n"
 echo -e
 
 # create tped by pasting snpInfo_tped.tmp and ${formattitle}Allele_tped.tmp
-paste -d" " snpInfo_tped.tmp ${formattitle}Allele_tped.tmp > data.tped
+paste -d" " ${raw_folder}/snpInfo_tped.tmp ${raw_folder}/${formattitle}Allele_tped.tmp > ${raw_folder}/data.tped
 
 
 
@@ -179,7 +179,7 @@ echo -e
 
 head -1 $DATAFILE | sed "s/\r//g" | sed "s/\t/\n/g" |\
  grep "${format}" | sed "s/.$format//g" |\
- awk '{if(NF==2){print $1,$2,0,0,0,-9}else{print $1,$1,0,0,0,-9}}' > data.tfam
+ awk '{if(NF==2){print $1,$2,0,0,0,-9}else{print $1,$1,0,0,0,-9}}' > ${raw_folder}/data.tfam
 
 
 #head -1 $DATAFILE | sed "s/\r//g" | sed "s/\t/\n/g" |\
@@ -196,7 +196,7 @@ echo -e "------------------\n"
 echo -e
 
 
-plink --tfile data --make-bed --out ${nickname}0 --noweb
+plink --tfile ${raw_folder}/data --make-bed --out ${OUTNAME} --noweb --allow-no-sex
 
 
 echo -e
@@ -205,10 +205,14 @@ echo "Delete Extraneous Files and Tar/Zip the Rest"
 echo -e "------------------\n"
 echo -e
 
-rmlist=$(ls data.* *.tmp *.hh *.nosex)
-rm -f $rmlist
+#rmlist=$(ls data.* *.tmp *.hh *.nosex)
+#rm -f $rmlist
 
-#tar --create -f raw.tar *
+cd ${raw_folder}/..
+tar -czf ${raw_folder}.tar.gz ${raw_folder}
+rm -rf ${raw_folder}
+rm -f ${OUTNAME}.nof ${OUTNAME}.hh ${OUTNAME}.nosex
+#tar --create -f makedata_tmp.tar ${raw_folder}
 
 #gzip raw.tar
 
