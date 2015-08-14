@@ -30,30 +30,26 @@ echo -e "#######################################################################
 
 # Definining/Reading user specified script parameters/variables/values
 phenofile=$1
-nickname=$2
-covariablecount=$3
-#covariabletitlefile=$3
-family_info=$4
+infile=$2
+outfile=$3
+
+covariablecount=$4
+#covariabletitlefile=$4
+ status=$5
 
 
-#Some studies does not include status information, but, generally, this is something we will want.
-status=T
-if [ "${nickname}" = "dn" ]; then
-  status=F
-fi
 
-#DOES THE PHENOTYPE FILE CONTAIN THE NECESSARY "Gender_converted_to_number" column?
-sex_repair=F
+
+#DOES THE PHENOTYPE FILE CONTAIN THE NECESSARY "Gender_converted_to_number" column? OR Is the "Sex" column already in numeric form?
+ sex_repair=F
 
 #Establish project folder as current working directory
-project_folder=$(pwd)
+project_folder=$(dirname ${outfile})
+temp=$(dirname ${outfile})/pheno_inc_tmp
+cov=${outfile}.covariable
+cov0=${outfile}.covariableX
 
-
-#It's easier to make variables to indicate these subfolders and files
-qc1_folder=${project_folder}/2_QC1
-raw_folder=${project_folder}/1_raw
-cov0=${raw_folder}/${nickname}0.cov
-cov=${qc1_folder}/${nickname}.cov
+mkdir ${temp}
 
 
 #Here is an array of likely covariable titles, note, we will assume that these are also the titles in the phenotype file
@@ -73,7 +69,7 @@ echo -e "#"
 echo -e "# Note: Study specific variables are expected"
 echo -e "# Note: Creates covariable lists and covariable file for use by later scripts in pipeline"
 echo -e "#"
-echo -e "# Usage: sh  ~/SHcode/pheno_inc.sh {phenofile} {nickname} {covariablecount} {family_info}"
+echo -e "# Usage: sh  ~/SHcode/pheno_inc.sh {phenofile} {infile} {outfile} {covariablecount} {status}"
 echo -e "#"
 echo -e "# See Script for option/parameter details"
 echo -e "#"
@@ -81,15 +77,15 @@ echo -e "# by:  jbonnie"
 echo -e "# date: 08.25.14"
 echo -e
 echo -e "Phenotype file: ${phenofile}"
-echo -e "Study Alias: ${nickname}"
+echo -e "Infile: ${infile}"
+echo -e "Outfile: ${outfile}"
 echo -e "Number of Covariables to be included: ${covariablecount}"
-echo -e "Family Information Included: ${family_info}"
+echo -e "Status Information to be Included: ${status}"
 echo -e "Performed on:"
 date
 echo -e
 echo -e "########################################################################################################################################"
 
-mkdir ${qc1_folder}
 
 echo -e
 echo -e "\n------------------"
@@ -100,16 +96,16 @@ echo -e
 #make new pheno with numeric sexcol
 if [ "${sex_repair}" = "T" ]; then
   badsexcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS = "\t"}; $0 ~/^Sex$/ {print NR}')
-  echo Gender_converted_to_number > sexcol.tmp
-  awk 'NR>1' $phenofile| sed 's/\r//g' | awk -v scol=${badsexcol} 'BEGIN {FS = "\t"}; {print $scol}' >> sexcol.tmp
-  sed -i 's/Female/2/g;s/Male/1/g;s/female/2/g;s/male/1/g' sexcol.tmp
-  sed -i 's/F$/2/g;s/M$/1/g;s/f$/2/g;s/m$/1/g' sexcol.tmp
+  echo Gender_converted_to_number > ${temp}/sexcol.tmp
+  awk 'NR>1' $phenofile| sed 's/\r//g' | awk -v scol=${badsexcol} 'BEGIN {FS = "\t"}; {print $scol}' >> ${temp}/sexcol.tmp
+  sed -i 's/Female/2/g;s/Male/1/g;s/female/2/g;s/male/1/g' ${temp}/sexcol.tmp
+  sed -i 's/F$/2/g;s/M$/1/g;s/f$/2/g;s/m$/1/g' ${temp}/sexcol.tmp
   
-  paste $phenofile sexcol.tmp > pheno_corrected.txt
-  sed -i 's/\r//g' pheno_corrected.txt
+  paste $phenofile ${temp}/sexcol.tmp > ${project_folder}/pheno_corrected.txt
+  sed -i 's/\r//g' ${project_folder}/pheno_corrected.txt
   
-  phenofile=pheno_corrected.txt
-  rm sexcol.tmp
+  phenofile=${project_folder}/pheno_corrected.txt
+  rm -f ${temp}/sexcol.tmp
 fi
 
 echo -e
@@ -124,20 +120,21 @@ statuscol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {
 familycol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/^Family_ID$/ {print NR}')
 
 if [ -z "$sexcol" ]; then
-  sexcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/Sex/ {print NR}')
+  sexcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/^Sex$/ {print NR}')
 fi
+
 #The title of the ID column will depend on the project with some regularity
-if [ "${nickname}" = "dn" ]; then
-	idcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/^UVA_ID$/ {print NR}')
-else
-  idcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/^Sample_ID$/ {print NR}')
-  if [ -z "$idcol" ]; then
-    idcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/^AnalyticID$/ {print NR}')
-    fi
-  if [ -z "$idcol" ]; then
-    idcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/^Analytic_ID$/ {print NR}')
-    fi
+idcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/^UVA_ID$/ {print NR}')
+if [ -z "$idcol" ]; then
+    idcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/^Sample_ID$/ {print NR}')
 fi
+if [ -z "$idcol" ]; then
+    idcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/^AnalyticID$/ {print NR}')
+fi
+if [ -z "$idcol" ]; then
+    idcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk 'BEGIN {FS="\t"}; $0 ~/^Vial_Barcode_Number$/ {print NR}')
+fi
+
 
 echo -e
 echo "Here are the column numbers for the numeric gender, sample id, and status columns"
@@ -152,7 +149,7 @@ echo "Creating Sex Update File"
 echo -e "------------------\n"
 echo -e
 
-awk 'NR>1' $phenofile | sed 's/\r//g' | sed '/^\s*$/d' | awk -v sexcol=${sexcol} -v idcol=${idcol} 'BEGIN {FS="\t"; OFS="\t"};{print $idcol, $idcol, $sexcol}' > ${qc1_folder}/updatesex.txt
+awk 'NR>1' $phenofile | sed 's/\r//g' | sed '/^\s*$/d' | awk -v sexcol=${sexcol} -v idcol=${idcol} 'BEGIN {FS="\t"; OFS="\t"};{print $idcol, $idcol, $sexcol}' > ${project_folder}/updatesex.txt
 
 
 echo -e
@@ -180,7 +177,7 @@ echo -e
 
 #Now lets copy in the columns we want
 #Lets start with the id columns
-awk 'NR>1' ${phenofile} | sed 's/\r//g' | sed '/^\s*$/d' | awk -v "idcol=${idcol}" 'BEGIN {FS="\t"; OFS="\t"}; {print $idcol, $idcol}' > covnames0.tmp
+awk 'NR>1' ${phenofile} | sed 's/\r//g' | sed '/^\s*$/d' | awk -v "idcol=${idcol}" 'BEGIN {FS="\t"; OFS="\t"}; {print $idcol, $idcol}' > ${temp}/covnames0.tmp
 
 
 
@@ -195,8 +192,8 @@ function fetch_covar {
   covariabletitle=${covariabletitles[${titleindex}]}
   ## FIGURING OUT THE LINE BELOW ALMOST MADE ME DO SOMETHING DRASTIC, LIKE GIVE UP COMPUTERS ALTOGETHER AND BECOME AN ELVIS IMPERSONATOR
   covcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk -v pattern="^"$covariabletitle"$" '$0 ~ pattern {print NR}')
-  awk -v "covcol=${covcol}" 'BEGIN {FS="\t"; OFS="\t"};NR>1{print $covcol}' ${phenofile} | sed 's/\r//g' | sed '/^\s*$/d'  > cov_${covindex}_col.tmp
-  paste covnames${titleindex}.tmp cov_${covindex}_col.tmp > covnames${covindex}.tmp
+  awk -v "covcol=${covcol}" 'BEGIN {FS="\t"; OFS="\t"};NR>1{print $covcol}' ${phenofile} | sed 's/\r//g' | sed '/^\s*$/d'  > ${temp}/cov_${covindex}_col.tmp
+  paste ${temp}/covnames${titleindex}.tmp ${temp}/cov_${covindex}_col.tmp > ${temp}/covnames${covindex}.tmp
  }
  
 
@@ -208,11 +205,11 @@ function fetch_covar {
 #Lets add the titles to the covariable file
 echo  -e 'FID\tIID\t'${covariabletitles[*]:0:${covariablecount}}| column -t > ${cov0}
 #And now the actual info
-cat covnames${covariablecount}.tmp >> ${cov0}
+cat ${temp}/covnames${covariablecount}.tmp >> ${cov0}
  
  
 # Just in case, later, we want the covariable file without numbers substituded for the strings
-cp ${cov0} ${raw_folder}/${nickname}0names.cov
+cp ${cov0} ${outfile}.covariable.names
 
 
 
@@ -235,8 +232,8 @@ function replace_covariable {
   echo ${covariables[@]}
   for i in $(seq ${count}); do
     index=$(($i-1))
-    awk -v i=${i} -v "covar=${covariables[${index}]}" -v "covcol=${covcol}" 'BEGIN {FS="\t"; OFS="\t"}; $covcol == covar{sub(covar, i, $covcol); } 1' ${cov0} > cov.tmp
-    mv cov.tmp ${cov0}
+    awk -v i=${i} -v "covar=${covariables[${index}]}" -v "covcol=${covcol}" 'BEGIN {FS="\t"; OFS="\t"}; $covcol == covar{sub(covar, i, $covcol); } 1' ${cov0} > ${temp}/cov.tmp
+    mv ${temp}/cov.tmp ${cov0}
   done
 
   title=$(head -n1 ${cov0} | awk -v "covcol=${covcol}" 'BEGIN {FS="\t"}; {print $covcol}')
@@ -258,35 +255,25 @@ cp ${cov0} ${cov}
 echo -e
 echo -e "\n------------------"
 echo "Update Status Information: ${status}"
-echo "Update Sex Information: ${status}"
 echo -e "------------------\n"
 echo -e
 #If status is included in the phenotype file, it needs to be incorporated into the plink file too!
-if [ "${status}" = "T" ]; then awk 'NR>1' $phenofile | sed 's/\r//g' | sed '/^\s*$/d'  | awk -v idcol=${idcol} -v statuscol=${statuscol} '{print $idcol, $idcol, $statuscol}' > ${qc1_folder}/updatestatus.txt
+if [ "${status}" = "T" ];
+    then awk 'NR>1' $phenofile | sed 's/\r//g' | sed '/^\s*$/d'  | awk -v idcol=${idcol} -v statuscol=${statuscol} '{print $idcol, $idcol, $statuscol}' > ${project_folder}/updatestatus.txt
 
-  #use PLINK to update the status in the 0 files produced in makedata steps
-  plink --bfile ${raw_folder}/${nickname}0 --make-bed --out ${qc1_folder}/${nickname}1a --noweb --pheno ${qc1_folder}/updatestatus.txt
-  #use PLINK to update the sex in the files
-  plink --bfile ${qc1_folder}/${nickname}1a --update-sex ${qc1_folder}/updatesex.txt  --make-bed --out ${qc1_folder}/${nickname}1 --noweb
-
-else plink --bfile ${raw_folder}/${nickname}0 --make-bed --out ${qc1_folder}/${nickname}1 --noweb --update-sex ${qc1_folder}/updatesex.txt
+    #use PLINK to update the status in the 0 files produced in makedata steps
+    plink --bfile ${infile} --make-bed --out ${outfile}_addstatus --noweb --pheno ${project_folder}/updatestatus.txt
+    infile=${outfile}_addstatus
 fi
+  #use PLINK to update the sex in the files
 
-
-echo -e
+  echo -e
 echo -e "\n------------------"
-echo "Update Family Information: ${family_info}"
+echo "Update Sex Information"
 echo -e "------------------\n"
 echo -e
-
-if [ "${family_info}" = "T" ]; then 
-mv ${qc1_folder}/${nickname}1.bim ${qc1_folder}/${nickname}1b.bim
-mv ${qc1_folder}/${nickname}1.log ${qc1_folder}/${nickname}1b.log
-mv ${qc1_folder}/${nickname}1.fam ${qc1_folder}/${nickname}1b.fam
-mv ${qc1_folder}/${nickname}1.bed ${qc1_folder}/${nickname}1b.bed
-plink --bfile ${qc1_folder}/${nickname}1b --make-bed --out ${qc1_folder}/${nickname}1c --noweb --update-ids ${project_folder}/updatefamily.txt
-plink --bfile ${qc1_folder}/${nickname}1c --make-bed --out ${qc1_folder}/${nickname}1 --noweb --update-parents ${project_folder}/updateparent.txt
-fi
+  
+plink --bfile ${infile} --update-sex ${project_folder}/updatesex.txt  --make-bed --out ${outfile} --noweb
 
 
 
