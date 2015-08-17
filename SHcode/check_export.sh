@@ -93,13 +93,13 @@ echo -e "------------------\n"
 echo -e
 
 
-head -n1 $DATAFILE | sed "s/\t/\n/g; s/\r//g" | grep "${format}" | sed "s/\.$format//g" | sed 's/^[[:space:]]*//' > $wkdir/export_iids.tmp
+head -n1 $DATAFILE | sed "s/\t/\n/g; s/\r//g" | grep "${format}" | sed "s/\.$format//g" > $wkdir/export_iids.tmp
 excount=$(cat $wkdir/export_iids.tmp | wc -l)
 uniqex=$(sort $wkdir/export_iids.tmp | uniq | wc -l )
 
 if [ $excount -ne $uniqex ]; then
 
-  sort $wkdir/export_iids.tmp | uniq -u >  $wkdir/duplicate_export_iids.txt
+  sort $wkdir/export_iids.tmp | uniq -d >  $wkdir/duplicate_export_iids.txt
   echo -e
   echo -e "ERROR: DATA EXPORT CONTAINS DUPLICATE IDS!"
   echo -e "List of duplicate IDs written here: "$wkdir/duplicate_export_iids.txt
@@ -146,7 +146,7 @@ if [ $trackcount -ne $trackuniq ]; then
   sort $wkdir/tracking_iids.tmp| uniq -u >  $wkdir/duplicate_tracking_iids.txt
   echo -e
   echo -e "ERROR: TRACKING SHEET CONTAINS DUPLICATE IDS!"
-  echo -e "List of $( cat $wkdir/duplicate_tracking_iids.txtt | wc -l ) duplicate IDs written here: "$wkdir/duplicate_tracking_iids.txt
+  echo -e "List of $( cat $wkdir/duplicate_tracking_iids.txt | wc -l ) duplicate IDs written here: "$wkdir/duplicate_tracking_iids.txt
   echo -e
   
 fi
