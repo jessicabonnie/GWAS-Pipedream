@@ -85,6 +85,14 @@ if [ $row2 -ne $lastrow ]; then
 fi
 
 
+echo -e
+echo -e "\n------------------"
+echo "Creating List of Export IDs"
+echo -e "------------------\n"
+echo -e
+    head -n1 $DATAFILE | sed "s/\t/\n/g; s/\r//g" | grep "${format}" | sed "s/\.$format//g" > $wkdir/export_iids.tmp
+    excount=$(cat $wkdir/export_iids.tmp | wc -l)
+    echo -e "There are ${excount} IDs in the export."
 
 echo -e
 echo -e "\n------------------"
@@ -93,8 +101,7 @@ echo -e "------------------\n"
 echo -e
 
 
-head -n1 $DATAFILE | sed "s/\t/\n/g; s/\r//g" | grep "${format}" | sed "s/\.$format//g" > $wkdir/export_iids.tmp
-excount=$(cat $wkdir/export_iids.tmp | wc -l)
+
 uniqex=$(sort $wkdir/export_iids.tmp | uniq | wc -l )
 
 if [ $excount -ne $uniqex ]; then
@@ -121,7 +128,7 @@ uniqpairs=$(sort $wkdir/tracking_pairs.tmp | uniq | wc -l )
 
 if [ $trackpairs -ne $uniqpairs ]; then
 
-  sort $wkdir/tracking_pairs.tmp | uniq -u | sed 's/_/\t/g' >  $wkdir/duplicate_barcode_positions.txt
+  sort $wkdir/tracking_pairs.tmp | uniq -d | sed 's/_/\t/g' >  $wkdir/duplicate_barcode_positions.txt
   echo -e
   echo -e "ERROR: TRACKING SHEET CONTAINS DUPLICATE BARCODE/POSITION PAIRS!"
   echo -e "List of $( cat $wkdir/duplicate_barcode_positions.txt | wc -l ) duplicate Barcode/Position Pairs here: "$wkdir/duplicate_barcode_positions.txt
@@ -130,20 +137,29 @@ if [ $trackpairs -ne $uniqpairs ]; then
 fi
 
 
+
+echo -e
+echo -e "\n------------------"
+echo "Creating List of Tracking IDs"
+echo -e "------------------\n"
+echo -e
+    awk -v header=$tracking_header 'BEGIN { FS = "," }; NR>header{print $1}' ${tracking} | sed 's/\r//g' > $wkdir/tracking_iids.tmp
+    trackcount=$(cat $wkdir/tracking_iids.tmp | wc -l)
+    echo -e "There are ${trackcount} IDs in the tracking sheet."
+
+
 echo -e
 echo -e "\n------------------"
 echo "Checking Tracking Sheet for Duplicate IDs"
 echo -e "------------------\n"
 echo -e
 
-awk -v header=$tracking_header 'BEGIN { FS = "," }; NR>header{print $1}' ${tracking} | sed 's/\r//g'  | sed 's/^[[:space:]]*//' > $wkdir/tracking_iids.tmp
 
-trackcount=$(cat $wkdir/tracking_iids.tmp | wc -l)
 trackuniq=$(sort $wkdir/tracking_iids.tmp | uniq | wc -l )
 
 if [ $trackcount -ne $trackuniq ]; then
 
-  sort $wkdir/tracking_iids.tmp| uniq -u >  $wkdir/duplicate_tracking_iids.txt
+  sort $wkdir/tracking_iids.tmp| uniq -d >  $wkdir/duplicate_tracking_iids.txt
   echo -e
   echo -e "ERROR: TRACKING SHEET CONTAINS DUPLICATE IDS!"
   echo -e "List of $( cat $wkdir/duplicate_tracking_iids.txt | wc -l ) duplicate IDs written here: "$wkdir/duplicate_tracking_iids.txt
@@ -159,31 +175,39 @@ echo "Checking IDs between Tracking Sheet and Export"
 echo -e "------------------\n"
 echo -e
 
+cat <(sort $wkdir/tracking_iids.tmp | uniq) <(sort $wkdir/export_iids.tmp | uniq) | sort | uniq -u > uniqids.tmp
+uniqcount=$(cat $wkdir/uniqids.tmp | wc -l)
+dupcount=$(cat <(sort $wkdir/tracking_iids.tmp | uniq) <(sort $wkdir/export_iids.tmp | uniq) | sort | uniq | wc -l)
 
-
-if [ $uniqex -ne $trackuniq ]; then
+if [ $uniqcount -ne 0 ]; then
 
   echo -e
   echo -e "ERROR: DIFFERENT NUMBER OF UNIQUE IDS IN TRACKING SHEET AND EXPORT!"
+  echo -e "${uniqcount} IDs found in only one list. IDs written here: $wkdir/uniqids.tmp"
   echo -e
   
 fi
 
-join <(cat $wkdir/tracking_iids.tmp | sort | uniq) <(cat $wkdir/export_iids.tmp | sort | uniq) > $wkdir/join.tmp
-idjoin=$(join <(cat $wkdir/tracking_iids.tmp | sort | uniq) <(cat $wkdir/export_iids.tmp | sort | uniq) | wc -l)
+# comm -3 --output-delimiter="\t" <(sort export_iids.tmp | uniq) <(sort tracking_iids.tmp | uniq) | awk 'BEGIN {FS = "\t";OFS = "\t"}{print $1,$2}' | sed '/^$/d' > $wkdir/combined_uniq.tmp
 
-if [ $idjoin -ne $trackuniq ]; then
-  
-  sort <( sort $wkdir/join.tmp | uniq) <( sort $wkdir/tracking_iids.tmp | uniq) | uniq -u  > $wkdir/trackingIDs_notinExport.txt
+
+#  join <(cat $wkdir/tracking_iids.tmp | sort | uniq) <(cat $wkdir/export_iids.tmp | sort | uniq) > $wkdir/join.tmp
+#  idjoin=$(join <(cat $wkdir/tracking_iids.tmp | sort | uniq) <(cat $wkdir/export_iids.tmp | sort | uniq) | wc -l)
+
+if [ $dupcount -ne $trackuniq ]; then
+
+  comm -3 <(sort export_iids.tmp | uniq) <(sort tracking_iids.tmp | uniq) | awk 'BEGIN {FS = "\t";OFS = "\t"}{print $2}' | sed '/^$/d' > $wkdir/trackingIDs_notinExport.txt
+#   comm <(sort $wkdir/tracking_iids.tmp | uniq)  <(sort $wkdir/uniqids.tmp)
+#   cat <(sort $wkdir/tracking_iids.tmp | uniq) <(sort $wkdir/uniqids.tmp) | sort | uniq -u  > $wkdir/trackingIDs_notinExport.txt
   echo -e "List of $(cat $wkdir/trackingIDs_notinExport.txt | wc -l) IIDs found in tracking sheet but not found in export: "$wkdir/trackingIDs_notinExport.txt
   echo -e
   
 fi
 
 
-if [ $idjoin -ne $uniqex ]; then
+if [ $dupcount -ne $uniqex ]; then
   
-  sort <( sort $wkdir/join.tmp | uniq) <( sort $wkdir/export_iids.tmp | uniq) | uniq -u > $wkdir/exportIDs_notinTracking.txt
+  comm -3  <(sort export_iids.tmp | uniq) <(sort tracking_iids.tmp | uniq) | awk 'BEGIN {FS = "\t";OFS = "\t"}{print $1}' | sed '/^$/d' > $wkdir/exportIDs_notinTracking.txt
   echo -e "List of $(cat $wkdir/exportIDs_notinTracking.txt | wc -l) IIDs found in export but not found in tracking sheet: "$wkdir/exportIDs_notinTracking.txt
   echo -e
   
