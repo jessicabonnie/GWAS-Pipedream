@@ -109,6 +109,7 @@ if [ $excount -ne $uniqex ]; then
   sort $wkdir/export_iids.tmp | uniq -d >  $wkdir/duplicate_export_iids.txt
   echo -e
   echo -e "ERROR: DATA EXPORT CONTAINS DUPLICATE IDS!"
+  echo -e "Number of duplicate export IDs: "$(cat $wkdir/duplicate_export_iids.txt |wc -l)
   echo -e "List of duplicate IDs written here: "$wkdir/duplicate_export_iids.txt
   echo -e
   
