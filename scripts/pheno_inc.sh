@@ -6,17 +6,16 @@
 
 
 ##############################################################################
-# Usage: sh  pheno_inc.sh {phenofile} {nickname} {covariablecount} {family_info}
+# Usage: sh  pheno_inc.sh {phenofile} {infile} {outfile} {covariablecount} {status T/F}
 ##############################################################################
 
 ####################################################################3
 #Arguments
 #phenofile : the path to phenotype table, expected to contain "Gender_converted_to_number" column. If it doesn't, flip "sex_repair" argument to add that column to the file.
-#		Also expected to contain the columns hard coded into the covariable list, as well as a status column titled "T1D", and a sample id column "Sample_ID"
-#nickname : string, the alias for the project, used in all filenames
+#infile : the path to the input unphenotyped plink file
+#outfile: the name/path to the output plink file at the end of the process. Intermediate files will be called by generalized names"
 #covariablecount : integer, the number of covariables to incorporate from the hard-coded list
-#family_info : T/F, Do we have relationship information to incorporate at the start of QC?
-#		If so, it had better be contained in ${project_folder}/updatefamily.txt and ${project_folder}/updateparent.txt.
+#status : T/F, Do we have disease status information? Script will look for it in columns titled "T1D" and "Status"
 #
 #####################################################################
 
@@ -129,7 +128,10 @@ if [ -z "$idcol" ]; then
     idcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk '$0 ~/^Sample_ID$/ {print NR}')
 fi
 if [ -z "$idcol" ]; then
-    idcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk ' $0 ~/^AnalyticID$/ {print NR}')
+    idcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk ' $0 ~/^SampleID$/ {print NR}')
+fi
+if [ -z "$idcol" ]; then
+    idcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk ' $0 ~/^Analytic_ID$/ {print NR}')
 fi
 if [ -z "$idcol" ]; then
     idcol=$(head -n1 ${phenofile}| sed 's/\r//g' | sed 's/\t/\n/g'| awk ' $0 ~/^Vial_Barcode_Number$/ {print NR}')

@@ -262,7 +262,7 @@ if [ "${status}" = "T" ];
     then awk 'NR>1' $phenofile | sed 's/\r//g' | sed '/^\s*$/d'  | awk -v idcol=${idcol} -v statuscol=${statuscol} '{print $idcol, $idcol, $statuscol}' > ${project_folder}/updatestatus.txt
 
     #use PLINK to update the status in the 0 files produced in makedata steps
-    plink --bfile ${infile} --make-bed --out ${outfile}_addstatus --noweb --pheno ${project_folder}/updatestatus.txt
+    plink --bfile ${infile} --make-bed --out ${outfile}_addstatus --noweb --pheno ${project_folder}/updatestatus.txt --allow-no-sex
     infile=${outfile}_addstatus
 fi
   #use PLINK to update the sex in the files
@@ -273,7 +273,7 @@ echo "Update Sex Information"
 echo -e "------------------\n"
 echo -e
   
-plink --bfile ${infile} --update-sex ${project_folder}/updatesex.txt  --make-bed --out ${outfile} --noweb
+plink --bfile ${infile} --update-sex ${project_folder}/updatesex.txt  --make-bed --out ${outfile} --noweb --allow-no-sex
 
 
 

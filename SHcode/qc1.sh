@@ -20,9 +20,9 @@
 
 
 # Definining/Reading user specified script parameters/variables/values
-
-nickname=$1
-sample_remove=$2
+plinkraw=$1
+nickname=$2
+sample_remove=$3
 project_folder=$(pwd)
 
 
@@ -42,16 +42,17 @@ echo -e "#"
 echo -e "# Disc: Run basic sample and SNP QC on PLINK files. Produces sample lists for follow up with genotyping lab."
 echo -e "#"
 echo -e "# Note: If duplicates samples are included in the samplesremove_at_start file, it will be removed TWICE."
-echo -e "# Note: Data should be in this folder:  ./1_raw/"
-echo -e "# Note: Data should be in binary plink format entitled {nickname}0 ."
+echo -e "# Note: Data should be in this folder:  ./2_QC1/"
+echo -e "# Note: Data should be in binary plink format entitled {nickname}1 ."
 echo -e "#"
-echo -e "# Usage: sh  ~/SHcode/qc1.sh {nickname} {sample_remove}"
+echo -e "# Usage: sh  ~/SHcode/qc1.sh {plinkraw} {nickname} {sample_remove}"
 echo -e "#"
 echo -e "# See Script for option/parameter details"
 echo -e "#"
 echo -e "# by:  jbonnie, WMChen"
 echo -e "# date: 08.25.14"
 echo -e
+echo -e "Raw Plink File input: ${plinkraw}"
 echo -e "Study Alias: ${nickname}"
 echo -e "Remove Samples from Data at Start: ${sample_remove}"
 echo -e "Performed on:"
@@ -72,6 +73,10 @@ mkdir ${nb}
 
 cd ${qc1_folder}
 
+cp ${plinkraw}.bim ${nickname}1.bim
+cp ${plinkraw}.bed ${nickname}1.bed
+cp ${plinkraw}.fam ${nickname}1.fam
+cp ${plinkraw}.log ${nickname}1.log
 
 #add headers to lists of snps and samples to be removed, which will be appended to throughout the program
 echo "FID IID REASON" > sampletoberemoved.txt
